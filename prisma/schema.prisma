@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Affiliate status enum
+enum AffiliateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Main Affiliate Model
+model Affiliate {
+  id              String           @id @default(uuid())
+  name            String
+  email           String           @unique
+  phone           String?
+  country         String?
+
+  // Social media links (JSON for flexibility)
+  socialLinks     Json?
+
+  // Content info
+  contentType     String?          // "streaming" | "videos" | "mixed"
+  experience      String?          // "beginner" | "intermediate" | "experienced"
+  motivation      String?          // How they plan to promote
+
+  // Affiliate code - unique and human-readable
+  affiliateCode   String           @unique
+  status          AffiliateStatus  @default(PENDING)
+  rejectionReason String?
+
+  // Performance metrics
+  totalClicks     Int              @default(0)
+  totalSales      Int              @default(0)
+  totalEarnings   Float            @default(0)
+
+  // Timestamps
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  approvedAt      DateTime?
+
+  // Relations
+  clicks          Click[]
+  sales           Sale[]
+  application     AffiliateApplication?
+
+  @@index([email])
+  @@index([status])
+  @@index([affiliateCode])
+  @@index([createdAt])
+}
+
+// Click Tracking Model
+model Click {
+  id            String    @id @default(uuid())
+  affiliateId   String
+  affiliate     Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  ip            String?
+  userAgent     String?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([affiliateId])
+  @@index([createdAt])
+}
+
+// Sales & Commission Tracking Model
+model Sale {
+  id            String    @id @default(uuid())
+  affiliateId   String
+  affiliate     Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  orderId       String    @unique
+  amount        Float
+  commission    Float     // 10% of amount by default
+
+  createdAt     DateTime  @default(now())
+
+  @@index([affiliateId])
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+// Admin Users Model
+model Admin {
+  id              String            @id @default(uuid())
+  username        String            @unique
+  // hashed with bcrypt (legacy field retained for backward compatibility)
+  password        String?
+  passwordHash    String
+  role            AdminRole         @default(SUPER_ADMIN)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  affiliateCodes  AffiliateCode[]
+  auditLogs         AuditLog[]
+
+  @@index([username])
+}
+
+// Affiliate Code Model (for referral tracking)
+model AffiliateCode {
+  id              String            @id @default(uuid())
+  code            String            @unique
+  name            String            // Custom label (e.g., "Ahmed X", "Majed Dash")
+  owner           String            // Owner name or description
+
+  // Tracking metrics
+  clicks          Int               @default(0)
+
+  // Relations
+  adminId         String
+  admin           Admin             @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  applicationId   String?           @unique
+  application     AffiliateApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([adminId])
+  @@index([code])
+  @@index([createdAt])
+}
+
+model AffiliateApplication {
+  id              String            @id @default(uuid())
+  name            String
+  email           String            @unique
+  phone           String?
+  country         String?
+  socialLinks     Json?
+  contentType     String?
+  experience      String?
+  motivation      String?
+
+  status          ApplicationStatus @default(PENDING)
+  rejectionReason String?
+
+  affiliateId     String?           @unique
+  affiliate       Affiliate?        @relation(fields: [affiliateId], references: [id], onDelete: SetNull)
+  affiliateCode   AffiliateCode?
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  reviewedAt      DateTime?
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Audit Log Model (optional, for tracking admin actions)
+model AuditLog {
+  id              String            @id @default(uuid())
+  action          String            // "CREATE", "UPDATE", "DELETE", "LOGIN"
+  resourceType    String            // "AffiliateCode", "Admin"
+  resourceId      String?
+  changes         Json?             // JSON object of changes
+  ipAddress       String?
+  userAgent       String?
+
+  adminId         String?
+  admin           Admin?            @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime          @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([adminId])
+}
+
+// Site content key-value store for CMS-managed text and settings.
+model SiteContent {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([updatedAt])
+}
