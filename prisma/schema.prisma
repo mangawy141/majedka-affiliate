@@ -197,3 +197,44 @@ model SiteContent {
 
   @@index([updatedAt])
 }
+
+// Application Questions - Dynamic form questions managed by admin
+model ApplicationQuestion {
+  id            String   @id @default(uuid())
+  label         String   // Question text (e.g., "اسمك", "How will you promote?")
+  type          String   // "text" | "textarea" | "select" | "multiselect"
+  placeholder   String?  // Placeholder text
+  required      Boolean  @default(true)
+  order         Int      // Display order (0, 1, 2, 3...)
+
+  // Optional: For select/multiselect types
+  options       Json?    // Array of options: [{ label: "...", value: "..." }]
+
+  // Optional: For field-specific validation/rules
+  metadata      Json?    // Additional configuration (min length, max length, etc.)
+
+  isActive      Boolean  @default(true) // Soft delete / disable questions
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([order])
+  @@index([isActive])
+}
+
+// Social Media Links - Editable footer social links
+model SocialMediaLink {
+  id        String   @id @default(uuid())
+  platform  String   // "whatsapp" | "instagram" | "tiktok"
+  label     String   // Display name
+  url       String   // Link URL
+  icon      String?  // Icon name or emoji (can be stored as string ref)
+  order     Int      // Display order
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([platform])
+  @@index([order])
+  @@index([isActive])
+}

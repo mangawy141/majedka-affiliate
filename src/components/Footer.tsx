@@ -1,16 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Gamepad2,
-  Globe,
-  Send,
-  Zap,
-  Users,
-  Mail,
-  Phone,
-  MapPin,
-} from "lucide-react";
+import Image from "next/image";
+import { Globe, Send, Zap, Users, Mail, Phone, MapPin } from "lucide-react";
 import type { SiteContentMap } from "@/lib/site-content";
 
 type FooterProps = {
@@ -26,12 +18,16 @@ export default function Footer({ tagline }: FooterProps) {
           {/* Brand Section */}
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Gamepad2 className="w-6 h-6 text-cyan-400" />
+              <Image
+                src="/logo.jpg"
+                alt="مجيدكا"
+                width={40}
+                height={40}
+                className="rounded"
+              />
               <span className="text-xl font-bold gradient-text">مجيدكا</span>
             </Link>
-            <p className="text-sm text-slate-400 mb-4">
-              {tagline}
-            </p>
+            <p className="text-sm text-slate-400 mb-4">{tagline}</p>
             <div className="flex gap-3">
               {[Globe, Send, Zap, Users].map((Icon, i) => (
                 <button

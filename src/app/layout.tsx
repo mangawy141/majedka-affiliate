@@ -1,22 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Cairo } from "next/font/google";
+import { Inter, Cairo } from "next/font/google";
 
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-sans",
 });
 
 const cairo = Cairo({
-  variable: "--font-arabic",
   subsets: ["arabic"],
+  variable: "--font-arabic",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+export const metadata: Metadata = {
+  title: "Majedka Affiliate",
+  description: "Affiliate system for gaming store",
+  icons: {
+    icon: "/logo.jpg",
+    shortcut: "/logo.jpg",
+    apple: "/logo.jpg",
+  },
+};
 
 export default function RootLayout({
   children,
@@ -27,7 +32,7 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
-      className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} h-full antialiased scroll-smooth`}
+      className={`${inter.variable} ${cairo.variable} h-full antialiased scroll-smooth`}
     >
       <body className="min-h-screen flex flex-col bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-slate-100">
         {children}

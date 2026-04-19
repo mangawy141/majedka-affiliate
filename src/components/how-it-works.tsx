@@ -31,9 +31,8 @@ export function HowItWorks() {
           {steps.map((step, index) => (
             <div key={index} className="relative">
               {/* Connecting line */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-16 left-full w-[calc(100%-2rem)] h-1 bg-gradient-to-r from-blue-500 to-transparent" />
-              )}
+
+              <div className="hidden md:block absolute top-16 left-full w-[calc(100%-2rem)] h-1 bg-gradient-to-r from-blue-500 to-transparent" />
 
               {/* Card */}
               <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-8 hover:border-blue-500/50 transition-all duration-300">

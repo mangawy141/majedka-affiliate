@@ -66,9 +66,9 @@ export default function AffiliateHeroSection({
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto animate-slide-in">
           {[
-            { number: "5000+", label: "صانع محتوى نشط" },
-            { number: "10%", label: "عمولة فورية" },
-            { number: "$500K+", label: "مدفوع هذا العام" },
+            { number: "10%", label: "ربح فوري من كل طلب" },
+            { number: "10%", label: "خصم خاص لمتابعينك" },
+            { number: "95%", label: "من منتجات المتجر تحت يديك" },
           ].map((stat, i) => (
             <div key={i} className="glass-sm p-4 rounded-lg">
               <div className="text-2xl md:text-3xl font-bold text-cyan-400 mb-1">

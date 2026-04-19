@@ -1,13 +1,12 @@
 import Navbar from "@/components/Navbar";
-import AffiliateHeroSection from "@/components/AffiliateHeroSection";
-import BenefitsSection from "@/components/BenefitsSection";
+import { SimplifiedHeroSection } from "@/components/SimplifiedHeroSection";
+import { SimplifiedBenefitsSection } from "@/components/SimplifiedBenefitsSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
-import AffiliateApplicationForm from "@/components/AffiliateApplicationForm";
-import AffiliateCTABanner from "@/components/AffiliateCTABanner";
-import AffiliateTestimonialsSection from "@/components/AffiliateTestimonialsSection";
-import Footer from "@/components/Footer";
-import { RewardsSection } from "@/components/rewards-section";
 import { FAQSection } from "@/components/faq-section";
+import { DynamicAffiliateForm } from "@/components/DynamicAffiliateForm";
+import { CTABanner } from "@/components/CTABanner";
+import { DynamicFooter } from "@/components/DynamicFooter";
+import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import { getSiteContent } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
@@ -23,31 +22,33 @@ export default async function Home() {
         middleUrl={content["nav.middleUrl"]}
         ctaLabel={content["nav.ctaLabel"]}
       />
-      <AffiliateHeroSection
-        title={content["hero.title"]}
-        subtitle={content["hero.subtitle"]}
-        badge={content["hero.badge"]}
-        primaryCtaLabel={content["hero.primaryCtaLabel"]}
-        secondaryCtaLabel={content["hero.secondaryCtaLabel"]}
-      />
-      <BenefitsSection
-        title={content["benefits.title"]}
-        description={content["benefits.description"]}
-      />
+      <SimplifiedHeroSection />
+      <SimplifiedBenefitsSection />
       <HowItWorksSection />
-      <RewardsSection
-        title={content["rewards.title"]}
-        description={content["rewards.description"]}
-      />
       <FAQSection
         title={content["faq.title"]}
         description={content["faq.description"]}
         items={content["faq.items"]}
       />
-      <AffiliateApplicationForm />
-      <AffiliateCTABanner explanationText={content["affiliate.explanation"]} />
-      <AffiliateTestimonialsSection />
-      <Footer tagline={content["footer.tagline"]} />
+      <CTABanner />
+
+      {/* Application Form Section */}
+      <section id="form" className="py-20 px-4 bg-gradient-to-br from-slate-900/50 to-blue-950/30 border-y border-slate-800">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              <span className="gradient-text">ابدأ رحلتك الآن</span>
+            </h2>
+            <p className="text-xl text-slate-300">
+              املأ النموذج التالي وسننقل بك لعالم الربح من الألعاب
+            </p>
+          </div>
+          <DynamicAffiliateForm />
+        </div>
+      </section>
+
+      <DynamicFooter />
+      <FloatingWhatsAppButton />
     </main>
   );
 }

@@ -31,8 +31,8 @@ export function HeroSection() {
             انضم الآن
           </a>
           <a
-            href="#how-it-works"
-            className="px-8 py-4 border border-slate-500 text-slate-300 font-semibold rounded-lg hover:border-blue-400 hover:text-blue-400 transition-all duration-300"
+            href="https://mjeedka.com/"
+            className="px-8 py-4 border border-slate-500 text-slate-300 font-semibold rounded-lg hover:border-blue-400 hover:text-blue-400 transition-all duration-300 cursor-pointer"
           >
             تعرف أكثر
           </a>

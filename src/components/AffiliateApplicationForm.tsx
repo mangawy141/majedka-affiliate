@@ -1,32 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Send,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
-import { CardSelect } from "@/components/form/CardSelect";
-import {
-  FormInput,
-  FormTextarea,
-} from "@/components/form/FormInputs";
-
-interface CardSelectOption {
-  value: string;
-  label: string;
-  description?: string;
-  icon?: React.ReactNode;
-}
-
-const COUNTRY_OPTIONS: CardSelectOption[] = [
-  { value: "SA", label: "السعودية", description: "المملكة العربية السعودية" },
-  { value: "AE", label: "الإمارات", description: "دولة الإمارات" },
-  { value: "EG", label: "مصر", description: "جمهورية مصر" },
-  { value: "KW", label: "الكويت", description: "دولة الكويت" },
-  { value: "QA", label: "قطر", description: "دولة قطر" },
-  { value: "OTHER", label: "أخرى", description: "دولة أخرى" },
-];
+import { Send, AlertCircle, CheckCircle } from "lucide-react";
+import { FormInput, FormTextarea } from "@/components/form/FormInputs";
 
 export default function AffiliateApplicationForm() {
   const [formData, setFormData] = useState({
@@ -45,68 +21,6 @@ export default function AffiliateApplicationForm() {
   const [success, setSuccess] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const platformOptions: CardSelectOption[] = [
-    {
-      value: "youtube",
-      label: "YouTube",
-      description: "فيديوهات طويلة",
-      icon: "📺",
-    },
-    { value: "tiktok", label: "TikTok", description: "محتوى قصير", icon: "🎵" },
-    { value: "twitch", label: "Twitch", description: "بث مباشر", icon: "🎮" },
-    {
-      value: "instagram",
-      label: "Instagram",
-      description: "صور وفيديو قصير",
-      icon: "📸",
-    },
-    { value: "twitter", label: "Twitter/X", description: "تغريدات", icon: "𝕏" },
-    { value: "discord", label: "Discord", description: "مجتمع", icon: "💬" },
-    {
-      value: "website",
-      label: "Blogging",
-      description: "موقع ويب",
-      icon: "📝",
-    },
-  ];
-
-  const followersOptions: CardSelectOption[] = [
-    { value: "100-1000", label: "100 - 1K", description: "البداية" },
-    { value: "1000+", label: "1K+", description: "نمو مبكر" },
-    { value: "10000+", label: "10K+", description: "وسط" },
-    { value: "100000+", label: "100K+", description: "كبير" },
-    { value: "1000000+", label: "1M+", description: "ضخم" },
-  ];
-
-  const contentTypeOptions: CardSelectOption[] = [
-    {
-      value: "gaming",
-      label: "ألعاب",
-      description: "محتوى الألعاب",
-      icon: "🎮",
-    },
-    { value: "tech", label: "تقنية", description: "تكنولوجيا", icon: "💻" },
-    {
-      value: "lifestyle",
-      label: "نمط حياة",
-      description: "يومي وترفيهي",
-      icon: "✨",
-    },
-    {
-      value: "reviews",
-      label: "مراجعات",
-      description: "منتجات وخدمات",
-      icon: "⭐",
-    },
-    {
-      value: "education",
-      label: "تعليم",
-      description: "دروس وشروحات",
-      icon: "📚",
-    },
-    { value: "other", label: "أخرى", description: "فئات أخرى", icon: "🌟" },
-  ];
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -119,15 +33,6 @@ export default function AffiliateApplicationForm() {
     });
   };
 
-  const handleCardSelect = (field: string, values: string[]) => {
-    setFormData((prev) => ({ ...prev, [field]: values[0] || "" }));
-    setFormErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[field];
-      return newErrors;
-    });
-  };
-
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -135,9 +40,9 @@ export default function AffiliateApplicationForm() {
     if (!formData.email.trim()) errors.email = "البريد الإلكتروني مطلوب";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       errors.email = "بريد إلكتروني غير صحيح";
-    if (!formData.platform) errors.platform = "اختر منصة";
-    if (!formData.followers) errors.followers = "اختر عدد المتابعين";
-    if (!formData.contentType) errors.contentType = "اختر نوع المحتوى";
+    if (!formData.platform.trim()) errors.platform = "المنصة مطلوبة";
+    if (!formData.followers.trim()) errors.followers = "عدد المتابعين مطلوب";
+    if (!formData.contentType.trim()) errors.contentType = "نوع المحتوى مطلوب";
     if (!formData.motivation.trim()) errors.motivation = "أخبرنا عن خططك";
 
     setFormErrors(errors);
@@ -156,23 +61,28 @@ export default function AffiliateApplicationForm() {
     setError("");
 
     try {
+      // Build payload: top-level known fields and pack any other inputs into `socialLinks`
+      const { name, email, phone, country, contentType, motivation, ...rest } =
+        formData;
+
+      const socialLinks: Record<string, string> = {};
+      Object.entries(rest).forEach(([k, v]) => {
+        if (v && String(v).trim() !== "") {
+          socialLinks[k] = String(v);
+        }
+      });
+
+      const payload: any = { name, email };
+      if (phone) payload.phone = phone;
+      if (country) payload.country = country;
+      if (contentType) payload.contentType = contentType;
+      if (motivation) payload.motivation = motivation;
+      if (Object.keys(socialLinks).length) payload.socialLinks = socialLinks;
+
       const response = await fetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || undefined,
-          country: formData.country || undefined,
-          platform: formData.platform,
-          followers: formData.followers,
-          contentType: formData.contentType || undefined,
-          motivation: formData.motivation || undefined,
-          socialLinks: {
-            platform: formData.platform,
-            followers: formData.followers,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -282,45 +192,45 @@ export default function AffiliateApplicationForm() {
               </div>
             </div>
 
-            <CardSelect
-              legend="الدولة (اختياري)"
-              name="country"
-              options={COUNTRY_OPTIONS}
-              selected={formData.country ? [formData.country] : []}
-              onChange={(sel) => handleCardSelect("country", sel)}
-              multiSelect={false}
-              gridClassName="sm:grid-cols-2 lg:grid-cols-3"
-            />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <FormInput
+                label="الدولة (اختياري)"
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                placeholder="مثال: السعودية أو الإمارات"
+              />
 
-            <CardSelect
-              legend="المنصة التي تستخدمها *"
-              name="platform"
-              options={platformOptions}
-              selected={formData.platform ? [formData.platform] : []}
-              onChange={(sel) => handleCardSelect("platform", sel)}
-              multiSelect={false}
-              error={formErrors.platform}
-            />
+              <FormInput
+                label="المنصة التي تستخدمها *"
+                name="platform"
+                value={formData.platform}
+                onChange={handleChange}
+                placeholder="مثال: YouTube أو TikTok أو Instagram"
+                required
+                error={formErrors.platform}
+              />
 
-            <CardSelect
-              legend="عدد متابعيك *"
-              name="followers"
-              options={followersOptions}
-              selected={formData.followers ? [formData.followers] : []}
-              onChange={(sel) => handleCardSelect("followers", sel)}
-              multiSelect={false}
-              error={formErrors.followers}
-            />
+              <FormInput
+                label="عدد متابعيك *"
+                name="followers"
+                value={formData.followers}
+                onChange={handleChange}
+                placeholder="مثال: 15K أو 1200"
+                required
+                error={formErrors.followers}
+              />
 
-            <CardSelect
-              legend="نوع محتواك *"
-              name="contentType"
-              options={contentTypeOptions}
-              selected={formData.contentType ? [formData.contentType] : []}
-              onChange={(sel) => handleCardSelect("contentType", sel)}
-              multiSelect={false}
-              error={formErrors.contentType}
-            />
+              <FormInput
+                label="نوع محتواك *"
+                name="contentType"
+                value={formData.contentType}
+                onChange={handleChange}
+                placeholder="مثال: تقنية أو ألعاب أو تعليم"
+                required
+                error={formErrors.contentType}
+              />
+            </div>
 
             <FormTextarea
               label="لماذا تريد الانضمام إلى برنامجنا؟"

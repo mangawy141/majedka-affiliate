@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Gamepad2 } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import type { SiteContentMap } from "@/lib/site-content";
 
 type NavbarProps = {
@@ -28,8 +29,14 @@ export default function Navbar({
             className="flex items-center gap-2 hover:opacity-80 transition"
           >
             <div className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <Gamepad2 className="w-8 h-8 text-cyan-400" />
-              مجيدكا
+              <Image
+                src="/logo.jpg"
+                alt="مجيدكا"
+                width={36}
+                height={36}
+                className="rounded"
+              />
+              <span>مجيدكا</span>
             </div>
           </Link>
 

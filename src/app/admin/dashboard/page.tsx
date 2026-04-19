@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -18,6 +18,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { FormInput, FormSelect } from "@/components/form/FormInputs";
+import ApplicationAnswers from "@/components/admin/ApplicationAnswers";
 
 interface AffiliateCode {
   id: string;
@@ -54,6 +55,13 @@ interface AffiliateApplication {
   name: string;
   email: string;
   phone?: string | null;
+  country?: string | null;
+  socialLinks?: Record<string, any> | null;
+  platform?: string | null;
+  followers?: string | null;
+  contentType?: string | null;
+  experience?: string | null;
+  motivation?: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
   rejectionReason?: string | null;
   createdAt: string;
@@ -88,6 +96,9 @@ export default function AdminDashboard() {
   const [applications, setApplications] = useState<AffiliateApplication[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [appLoading, setAppLoading] = useState(false);
+
+  const [questionsMap, setQuestionsMap] = useState<Record<string, string>>({});
+  const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
 
   // Fetch codes
   const fetchCodes = async (page = 1) => {
@@ -171,6 +182,27 @@ export default function AdminDashboard() {
     fetchApplications();
     const interval = window.setInterval(fetchApplications, 15000);
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Load active questions so we can show friendly labels for dynamic keys
+    const loadQuestions = async () => {
+      try {
+        const res = await fetch("/api/config");
+        if (!res.ok) return;
+        const json = await res.json();
+        const map: Record<string, string> = {};
+        (json.questions || []).forEach((q: any) => {
+          if (q.id) map[q.id] = q.label;
+          if (q.label) map[q.label] = q.label; // support keys that are labels
+        });
+        setQuestionsMap(map);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    void loadQuestions();
   }, []);
 
   const handleApplicationAction = async (
@@ -282,6 +314,13 @@ export default function AdminDashboard() {
                 طلبات جديدة: {pendingCount}
               </div>
               <Link
+                href="/admin/config"
+                className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-500/20"
+              >
+                إعدادات الموقع
+              </Link>
+
+              <Link
                 href="/admin/content"
                 className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-500/20"
               >
@@ -326,75 +365,149 @@ export default function AdminDashboard() {
           {appLoading ? (
             <div className="p-6 text-slate-400">جاري تحميل الطلبات...</div>
           ) : applications.length === 0 ? (
-            <div className="p-6 text-slate-400">لا توجد طلبات معلقة حالياً.</div>
+            <div className="p-6 text-slate-400">
+              لا توجد طلبات معلقة حالياً.
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-900/40">
                   <tr>
-                    <th className="px-6 py-3 text-right text-xs text-cyan-300">الاسم</th>
-                    <th className="px-6 py-3 text-right text-xs text-cyan-300">الكود</th>
-                    <th className="px-6 py-3 text-right text-xs text-cyan-300">التواصل</th>
-                    <th className="px-6 py-3 text-right text-xs text-cyan-300">التاريخ</th>
-                    <th className="px-6 py-3 text-right text-xs text-cyan-300">الإجراء</th>
+                    <th className="px-6 py-3 text-right text-xs text-cyan-300">
+                      الاسم
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs text-cyan-300">
+                      الكود
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs text-cyan-300">
+                      التواصل
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs text-cyan-300">
+                      التاريخ
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs text-cyan-300">
+                      الإجراء
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {applications.map((app) => (
-                    <tr key={app.id} className="hover:bg-slate-800/40">
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-slate-100">{app.name}</div>
-                        <div className="text-xs text-slate-400">{app.email}</div>
-                      </td>
-                      <td className="px-6 py-4 font-mono text-cyan-300">
-                        {app.affiliateCode?.code || "-"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          {app.emailUrl && (
-                            <a
-                              href={app.emailUrl}
-                              className="inline-flex items-center gap-1 rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:border-cyan-400"
+                    <React.Fragment key={app.id}>
+                      <tr className="hover:bg-slate-800/40">
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-slate-100">
+                            {app.name}
+                          </div>
+                          <div className="text-xs text-slate-400">{app.email}</div>
+                        </td>
+                        <td className="px-6 py-4 font-mono text-cyan-300">
+                          {app.affiliateCode?.code || "-"}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            {app.emailUrl && (
+                              <a
+                                href={app.emailUrl}
+                                className="inline-flex items-center gap-1 rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:border-cyan-400"
+                              >
+                                <Mail className="h-3.5 w-3.5" />
+                                Email
+                              </a>
+                            )}
+                            {app.whatsappUrl && (
+                              <a
+                                href={app.whatsappUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:border-cyan-400"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                                WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-xs text-slate-400">
+                          {new Date(app.createdAt).toLocaleString("ar-SA")}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-start gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedAppId((prev) => (prev === app.id ? null : app.id))
+                              }
+                              className="rounded bg-slate-700/40 px-3 py-1 text-xs text-slate-200 hover:bg-slate-700/60"
                             >
-                              <Mail className="h-3.5 w-3.5" />
-                              Email
-                            </a>
-                          )}
-                          {app.whatsappUrl && (
-                            <a
-                              href={app.whatsappUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:border-cyan-400"
+                              تفاصيل
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleApplicationAction(app.id, "approve")}
+                              className="rounded bg-emerald-500/20 px-3 py-1 text-xs text-emerald-300 hover:bg-emerald-500/30"
                             >
-                              <MessageCircle className="h-3.5 w-3.5" />
-                              WhatsApp
-                            </a>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-xs text-slate-400">
-                        {new Date(app.createdAt).toLocaleString("ar-SA")}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleApplicationAction(app.id, "approve")}
-                            className="rounded bg-emerald-500/20 px-3 py-1 text-xs text-emerald-300 hover:bg-emerald-500/30"
-                          >
-                            موافقة
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleApplicationAction(app.id, "reject")}
-                            className="rounded bg-red-500/20 px-3 py-1 text-xs text-red-300 hover:bg-red-500/30"
-                          >
-                            رفض
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                              موافقة
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleApplicationAction(app.id, "reject")}
+                              className="rounded bg-red-500/20 px-3 py-1 text-xs text-red-300 hover:bg-red-500/30"
+                            >
+                              رفض
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {expandedAppId === app.id && (
+                        <tr key={`${app.id}-details`} className="bg-slate-900/20">
+                          <td colSpan={5} className="px-6 py-4">
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div>
+                                <h4 className="text-sm font-semibold text-slate-200 mb-2">
+                                  بيانات الطلب
+                                </h4>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between text-sm">
+                                    <div className="text-slate-400">الاسم</div>
+                                    <div className="text-white">{app.name}</div>
+                                  </div>
+                                  <div className="flex justify-between text-sm">
+                                    <div className="text-slate-400">البريد</div>
+                                    <div className="text-white">{app.email}</div>
+                                  </div>
+                                  <div className="flex justify-between text-sm">
+                                    <div className="text-slate-400">الهاتف</div>
+                                    <div className="text-white">{app.phone || "-"}</div>
+                                  </div>
+                                  <div className="flex justify-between text-sm">
+                                    <div className="text-slate-400">الدولة</div>
+                                    <div className="text-white">{app.country || "-"}</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h4 className="text-sm font-semibold text-slate-200 mb-2">
+                                  الإجابات الإضافية
+                                </h4>
+                                <ApplicationAnswers
+                                  data={{
+                                    ...((app as any).socialLinks || {}),
+                                    platform: (app as any).platform,
+                                    followers: (app as any).followers,
+                                    contentType: (app as any).contentType,
+                                    experience: (app as any).experience,
+                                    motivation: (app as any).motivation,
+                                  }}
+                                  questionsMap={questionsMap}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

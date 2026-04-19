@@ -62,9 +62,8 @@ export default function HowItWorksSection() {
             </div>
 
             {/* Connector Line (hidden on mobile) */}
-            {i < steps.length - 1 && (
-              <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent" />
-            )}
+
+            <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent" />
           </div>
         ))}
       </div>

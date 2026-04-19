@@ -40,7 +40,11 @@ export async function createApplicationWithAutoCode(
 
   const existing = await prisma.affiliateApplication.findUnique({
     where: { email },
-    select: { id: true, status: true, affiliate: { select: { affiliateCode: true } } },
+    select: {
+      id: true,
+      status: true,
+      affiliate: { select: { affiliateCode: true } },
+    },
   });
   if (existing) {
     throw new Error("هذا البريد الإلكتروني لديه طلب بالفعل");
@@ -48,6 +52,11 @@ export async function createApplicationWithAutoCode(
 
   const code = await generateUniqueAffiliateCode(input.name);
   const adminId = await getCodeOwnerAdminId();
+
+  // derive followers value from either top-level field or inside socialLinks
+  const followersForExperience =
+    input.followers ||
+    (input.socialLinks && (input.socialLinks as any).followers);
 
   const { affiliate, application, affiliateCode } = await prisma.$transaction(
     async (tx) => {
@@ -59,13 +68,16 @@ export async function createApplicationWithAutoCode(
           country: input.country || null,
           socialLinks: input.socialLinks
             ? input.socialLinks
-            : { platform: input.platform || null, followers: input.followers || null },
+            : {
+                platform: input.platform || null,
+                followers: input.followers || null,
+              },
           contentType: input.contentType || null,
           experience:
-            input.followers === "1000+" ||
-            input.followers === "10000+" ||
-            input.followers === "100000+" ||
-            input.followers === "1000000+"
+            followersForExperience &&
+            ["1000+", "10000+", "100000+", "1000000+"].includes(
+              String(followersForExperience),
+            )
               ? "intermediate"
               : "beginner",
           motivation: input.motivation || null,
@@ -140,7 +152,9 @@ export async function updateApplicationDecision(input: {
       where: { id: input.id },
       data: {
         status: approved ? "APPROVED" : "REJECTED",
-        rejectionReason: approved ? null : (input.rejectionReason ?? "تم الرفض"),
+        rejectionReason: approved
+          ? null
+          : (input.rejectionReason ?? "تم الرفض"),
         reviewedAt: now,
       },
     });
@@ -149,7 +163,9 @@ export async function updateApplicationDecision(input: {
       where: { id: application.affiliateId! },
       data: {
         status: approved ? "APPROVED" : "REJECTED",
-        rejectionReason: approved ? null : (input.rejectionReason ?? "تم الرفض"),
+        rejectionReason: approved
+          ? null
+          : (input.rejectionReason ?? "تم الرفض"),
         approvedAt: approved ? now : null,
       },
     });
@@ -168,4 +184,3 @@ export async function updateApplicationDecision(input: {
 
   return updated;
 }
-
